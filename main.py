@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory, request
+from flask import Flask, render_template, send_from_directory, request, url_for, redirect
 from werkzeug.utils import secure_filename
 from forms import FileForm
 from os import path
@@ -9,10 +9,11 @@ server = Flask(__name__)
 
 @server.route("/", methods=("GET", "POST"))
 def home():
-    form = FileForm()
-    if request.method == "POST" and form.validate():
-        # print(secure_filename(filename=form.file.data))
-        print(form.file.data)
+    form = FileForm(meta={"csrf": False})
+    if request.method == "POST" and form.validate_on_submit():
+        filename = secure_filename(filename=form.file.data.filename)
+        form.file.data.save(dst=filename)
+        return redirect(url_for("home"))
 
     return render_template("index.html", form=form)
 
